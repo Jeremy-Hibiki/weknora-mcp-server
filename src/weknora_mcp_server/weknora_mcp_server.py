@@ -154,8 +154,8 @@ async def get_knowledge_base(
     kb_id: Annotated[str, Field(description="Knowledge base ID")],
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """Get knowledge base details."""
-    return json.dumps(_unwrap(client.get_knowledge_base(client.resolve_kb_id(kb_id))), indent=2, ensure_ascii=False)
+    """Get knowledge base details (slim summary)."""
+    return json.dumps(_kb_summary(_unwrap(client.get_knowledge_base(client.resolve_kb_id(kb_id)))), indent=2, ensure_ascii=False)
 
 
 @mcp.tool()
