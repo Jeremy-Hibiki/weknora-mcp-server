@@ -103,3 +103,14 @@ class KnowledgeDetail(TypedDict):
     summary_status: str
     created_at: str
     updated_at: str
+
+
+class SearchHit(TypedDict):
+    """hybrid_search 的精简命中视图。"""
+
+    content: str
+    score: float
+    match_type: int
+    knowledge_id: str
+    knowledge_title: str
+    chunk_index: int

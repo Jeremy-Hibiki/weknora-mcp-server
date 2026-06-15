@@ -8,7 +8,7 @@ operations and chat pipelines are intentionally not exposed.
 """
 
 from ._client import WeKnoraClient
-from ._types.responses import KnowledgeDetail, KnowledgeSummary, KBSummary
+from ._types.responses import KnowledgeDetail, KnowledgeSummary, KBSummary, SearchHit
 
 from fastmcp.exceptions import AuthorizationError
 
@@ -169,6 +169,23 @@ def _knowledge_detail(k: Any) -> KnowledgeDetail:
     }
 
 
+def _search_hit(hit: Any) -> SearchHit:
+    """Project a search hit to LLM-facing fields.
+
+    Drops the redundant ``matched_content`` (duplicates content with a filename
+    prefix) and the long ``knowledge_description`` (the whole abstract repeated
+    on every chunk of the same knowledge), plus debug offsets and chunk ids.
+    """
+    return {
+        "content": hit.get("content", ""),
+        "score": hit.get("score", 0.0),
+        "match_type": hit.get("match_type", 0),
+        "knowledge_id": hit.get("knowledge_id", ""),
+        "knowledge_title": hit.get("knowledge_title", ""),
+        "chunk_index": hit.get("chunk_index", 0),
+    }
+
+
 # ── Knowledge Base Management ─────────────────────────────────────────────────
 
 
@@ -207,17 +224,14 @@ async def hybrid_search(
     match_count: Annotated[int, Field(description="Number of results to return")] = 5,
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """Perform hybrid search in knowledge base."""
+    """Perform hybrid search in knowledge base (slim hits)."""
     config = {
         "vector_threshold": vector_threshold,
         "keyword_threshold": keyword_threshold,
         "match_count": match_count,
     }
-    return json.dumps(
-        _unwrap(client.hybrid_search(client.resolve_kb_id(kb_id), query, config)),
-        indent=2,
-        ensure_ascii=False,
-    )
+    data = _unwrap(client.hybrid_search(client.resolve_kb_id(kb_id), query, config))
+    return json.dumps([_search_hit(h) for h in (data or [])], indent=2, ensure_ascii=False)
 
 
 # ── Knowledge Management ──────────────────────────────────────────────────────
