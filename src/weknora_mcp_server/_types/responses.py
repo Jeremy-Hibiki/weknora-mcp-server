@@ -59,3 +59,19 @@ class KnowledgeDetailResponse(TypedDict):
     code: int
     message: str
     data: Knowledge
+
+
+# ── Slim views (tool-facing, LLM-friendly projections) ────────────────────────
+
+
+class KBSummary(TypedDict):
+    """list_knowledge_bases 的精简视图，只保留对检索决策有用的字段。"""
+
+    id: str
+    name: str
+    description: str
+    type: str
+    knowledge_count: int
+    capabilities: dict[str, bool]
+    created_at: str
+    updated_at: str

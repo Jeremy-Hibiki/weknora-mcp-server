@@ -8,6 +8,7 @@ operations and chat pipelines are intentionally not exposed.
 """
 
 from ._client import WeKnoraClient
+from ._types.responses import KBSummary
 
 from fastmcp.exceptions import AuthorizationError
 
@@ -124,13 +125,28 @@ def _unwrap(resp: Any) -> Any:
     return resp
 
 
+def _kb_summary(kb: Any) -> KBSummary:
+    """Project a full KB payload to the LLM-facing summary fields."""
+    return {
+        "id": kb.get("id", ""),
+        "name": kb.get("name", ""),
+        "description": kb.get("description", ""),
+        "type": kb.get("type", ""),
+        "knowledge_count": kb.get("knowledge_count", 0),
+        "capabilities": kb.get("capabilities") or {},
+        "created_at": kb.get("created_at", ""),
+        "updated_at": kb.get("updated_at", ""),
+    }
+
+
 # ── Knowledge Base Management ─────────────────────────────────────────────────
 
 
 @mcp.tool()
 async def list_knowledge_bases(client: WeKnoraClient = ClientDependency) -> str:
-    """List all knowledge bases."""
-    return json.dumps(_unwrap(client.list_knowledge_bases()), indent=2, ensure_ascii=False)
+    """List all knowledge bases (slim summary per KB)."""
+    data = _unwrap(client.list_knowledge_bases())
+    return json.dumps([_kb_summary(kb) for kb in (data or [])], indent=2, ensure_ascii=False)
 
 
 @mcp.tool()
