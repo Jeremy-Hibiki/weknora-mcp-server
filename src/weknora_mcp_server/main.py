@@ -33,7 +33,7 @@ class ApiKeyASGIMiddleware:
         self.app = app
         self.exclude_paths = exclude_paths or set()
 
-    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         # 只拦截 HTTP 请求，WebSocket / lifespan 直接放行
         if scope["type"] != "http":
             await self.app(scope, receive, send)
@@ -46,7 +46,9 @@ class ApiKeyASGIMiddleware:
             return
 
         headers = dict(scope.get("headers", []))
-        x_api_key = headers.get(b"x-api-key")
+        # 与 InjectApiKeyMiddleware 一致：HTTP client 可通过 X-Api-Key 头传 key，
+        # 缺省时回退到进程环境变量（便于 stdio/HTTP dev 模式从 .env 注入）。
+        x_api_key = headers.get(b"x-api-key") or os.environ.get("WEKNORA_API_KEY", "").encode()
 
         if not x_api_key:
             response = JSONResponse(
@@ -81,7 +83,7 @@ app = mcp.http_app(
 )
 
 
-def check_environment_variables():
+def check_environment_variables() -> bool:
     """检查环境变量配置"""
     base_url = os.getenv("WEKNORA_BASE_URL")
     api_key = os.getenv("WEKNORA_API_KEY")
@@ -101,7 +103,7 @@ def check_environment_variables():
     return True
 
 
-def parse_arguments():
+def parse_arguments() -> argparse.Namespace:
     """解析命令行参数"""
     parser = argparse.ArgumentParser(
         description="WeKnora MCP Server - Model Context Protocol server for WeKnora API",
@@ -139,7 +141,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-async def main():
+async def main() -> None:
     """主函数"""
     args = parse_arguments()
 
@@ -184,7 +186,7 @@ async def main():
         sys.exit(1)
 
 
-def sync_main():
+def sync_main() -> None:
     """同步版本的主函数，用于 entry_points"""
     asyncio.run(main())
 

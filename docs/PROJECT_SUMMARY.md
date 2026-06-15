@@ -103,14 +103,10 @@ set WEKNORA_API_KEY=your_api_key_here
 
 ## 🛠️ 功能特性
 
-### MCP 工具 (21个)
-- **租户管理**: `create_tenant`, `list_tenants`
-- **知识库管理**: `create_knowledge_base`, `list_knowledge_bases`, `get_knowledge_base`, `delete_knowledge_base`, `hybrid_search`
-- **知识管理**: `create_knowledge_from_url`, `list_knowledge`, `get_knowledge`, `delete_knowledge`
-- **模型管理**: `create_model`, `list_models`, `get_model`
-- **会话管理**: `create_session`, `get_session`, `list_sessions`, `delete_session`
-- **聊天功能**: `chat`
-- **块管理**: `list_chunks`, `delete_chunk`
+### MCP 工具 (8 个，只读检索)
+- **知识库管理**: `list_knowledge_bases`, `get_knowledge_base`, `hybrid_search`
+- **知识管理**: `list_knowledge`, `get_knowledge`
+- **Wiki 检索**: `wiki_search`, `wiki_read_page`, `wiki_index_view`
 
 ### 技术特性
 - ✅ 异步 I/O 支持

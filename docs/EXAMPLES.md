@@ -1,6 +1,6 @@
 # WeKnora MCP Server 使用示例
 
-本文档提供了 WeKnora MCP Server 的详细使用示例。
+本文档提供 WeKnora MCP Server 的使用示例。该服务器为**只读检索**服务器，仅暴露查询类工具，不提供创建、删除、更新及聊天等写操作。
 
 ## 基本使用
 
@@ -9,9 +9,6 @@
 ```bash
 # 推荐方式 - 使用主入口点
 python main.py
-
-# 检查环境配置
-python main.py --check-only
 
 # 启用详细日志
 python main.py --verbose
@@ -31,50 +28,9 @@ echo "WEKNORA_API_KEY=your_api_key_here" >> .env
 
 ## MCP 工具使用示例
 
-以下是各种 MCP 工具的使用示例：
+> 所有工具的返回均已剥离 `code`/`message` 协议包裹，直接返回业务数据（`data` 载荷）。
 
-### 租户管理
-
-#### 创建租户
-```json
-{
-  "tool": "create_tenant",
-  "arguments": {
-    "name": "我的公司",
-    "description": "公司知识管理系统",
-    "business": "technology",
-    "retriever_engines": {
-      "engines": [
-        {"retriever_type": "keywords", "retriever_engine_type": "postgres"},
-        {"retriever_type": "vector", "retriever_engine_type": "postgres"}
-      ]
-    }
-  }
-}
-```
-
-#### 列出所有租户
-```json
-{
-  "tool": "list_tenants",
-  "arguments": {}
-}
-```
-
-### 知识库管理
-
-#### 创建知识库
-```json
-{
-  "tool": "create_knowledge_base",
-  "arguments": {
-    "name": "产品文档库",
-    "description": "产品相关文档和资料",
-    "embedding_model_id": "text-embedding-ada-002",
-    "summary_model_id": "gpt-3.5-turbo"
-  }
-}
-```
+### 知识库发现
 
 #### 列出知识库
 ```json
@@ -94,6 +50,10 @@ echo "WEKNORA_API_KEY=your_api_key_here" >> .env
 }
 ```
 
+> `kb_id` 既支持 UUID，也支持知识库名称（如 `my-knowledge-base`），服务器会自动解析。
+
+### 检索
+
 #### 混合搜索
 ```json
 {
@@ -108,21 +68,7 @@ echo "WEKNORA_API_KEY=your_api_key_here" >> .env
 }
 ```
 
-### 知识管理
-
-#### 从URL创建知识
-```json
-{
-  "tool": "create_knowledge_from_url",
-  "arguments": {
-    "kb_id": "kb_123456",
-    "url": "https://docs.example.com/api-guide",
-    "enable_multimodel": true
-  }
-}
-```
-
-#### 列出知识
+#### 列出知识 / 获取知识详情
 ```json
 {
   "tool": "list_knowledge",
@@ -133,8 +79,6 @@ echo "WEKNORA_API_KEY=your_api_key_here" >> .env
   }
 }
 ```
-
-#### 获取知识详情
 ```json
 {
   "tool": "get_knowledge",
@@ -142,174 +86,98 @@ echo "WEKNORA_API_KEY=your_api_key_here" >> .env
     "knowledge_id": "know_789012"
   }
 }
-```
+```\n\n### Wiki 检索
 
-### 模型管理
-
-#### 创建模型
+#### 搜索 Wiki 页面
 ```json
 {
-  "tool": "create_model",
-  "arguments": {
-    "name": "GPT-4 Chat Model",
-    "type": "KnowledgeQA",
-    "source": "openai",
-    "description": "OpenAI GPT-4 模型用于知识问答",
-    "base_url": "https://api.openai.com/v1",
-    "api_key": "sk-...",
-    "is_default": true
-  }
-}
-```
-
-#### 列出模型
-```json
-{
-  "tool": "list_models",
-  "arguments": {}
-}
-```
-
-### 会话管理
-
-#### 创建聊天会话
-```json
-{
-  "tool": "create_session",
+  "tool": "wiki_search",
   "arguments": {
     "kb_id": "kb_123456",
-    "max_rounds": 10,
-    "enable_rewrite": true,
-    "fallback_response": "抱歉，我无法回答这个问题。",
-    "summary_model_id": "gpt-3.5-turbo"
+    "query": "用户认证",
+    "limit": 10
   }
 }
 ```
 
-#### 获取会话详情
+#### 读取 Wiki 页面
 ```json
 {
-  "tool": "get_session",
+  "tool": "wiki_read_page",
   "arguments": {
-    "session_id": "sess_345678"
+    "kb_id": "kb_123456",
+    "slug": "concept/rag"
   }
 }
 ```
 
-#### 列出会话
+#### 获取 Wiki 索引
 ```json
 {
-  "tool": "list_sessions",
+  "tool": "wiki_index_view",
   "arguments": {
-    "page": 1,
-    "page_size": 10
-  }
-}
-```
-
-### 聊天功能
-
-#### 发送聊天消息
-```json
-{
-  "tool": "chat",
-  "arguments": {
-    "session_id": "sess_345678",
-    "query": "请介绍一下产品的主要功能"
-  }
-}
-```
-
-### 块管理
-
-#### 列出知识块
-```json
-{
-  "tool": "list_chunks",
-  "arguments": {
-    "knowledge_id": "know_789012",
-    "page": 1,
-    "page_size": 50
-  }
-}
-```
-
-#### 删除知识块
-```json
-{
-  "tool": "delete_chunk",
-  "arguments": {
-    "knowledge_id": "know_789012",
-    "chunk_id": "chunk_456789"
+    "kb_id": "kb_123456",
+    "limit": 50
   }
 }
 ```
 
 ## 完整工作流程示例
 
-### 场景：创建一个完整的知识问答系统
+### 场景：检索并阅读知识库内容
 
 ```bash
 # 1. 启动服务器
 python main.py --verbose
 
-# 2. 在 MCP 客户端中执行以下步骤：
+# 2. 在 MCP 客户端中按以下步骤检索
 ```
 
-#### 步骤 1: 创建租户
+#### 步骤 1: 发现可用的知识库
 ```json
 {
-  "tool": "create_tenant",
+  "tool": "list_knowledge_bases",
+  "arguments": {}
+}
+```
+
+#### 步骤 2: 在目标知识库中混合搜索
+```json
+{
+  "tool": "hybrid_search",
   "arguments": {
-    "name": "技术文档中心",
-    "description": "公司技术文档知识管理",
-    "business": "technology"
+    "kb_id": "API文档库",
+    "query": "如何使用用户认证API？",
+    "match_count": 5
   }
 }
 ```
 
-#### 步骤 2: 创建知识库
+#### 步骤 3: 查看命中的知识
 ```json
 {
-  "tool": "create_knowledge_base",
+  "tool": "get_knowledge",
   "arguments": {
-    "name": "API文档库",
-    "description": "所有API相关文档"
+    "knowledge_id": "搜索结果中的 knowledge_id"
   }
 }
 ```
 
-#### 步骤 3: 添加知识内容
+#### 步骤 4: 阅读 Wiki 中的结构化条目
 ```json
 {
-  "tool": "create_knowledge_from_url",
+  "tool": "wiki_index_view",
   "arguments": {
-    "kb_id": "返回的知识库ID",
-    "url": "https://docs.company.com/api",
-    "enable_multimodel": true
+    "kb_id": "API文档库"
   }
 }
 ```
-
-#### 步骤 4: 创建聊天会话
 ```json
 {
-  "tool": "create_session",
+  "tool": "wiki_read_page",
   "arguments": {
-    "kb_id": "知识库ID",
-    "max_rounds": 5,
-    "enable_rewrite": true
-  }
-}
-```
-
-#### 步骤 5: 开始对话
-```json
-{
-  "tool": "chat",
-  "arguments": {
-    "session_id": "会话ID",
-    "query": "如何使用用户认证API？"
+    "kb_id": "API文档库",
+    "slug": "concept/authentication"
   }
 }
 ```
@@ -330,7 +198,7 @@ python main.py --verbose
 ```json
 {
   "error": "Unauthorized",
-  "solution": "检查 WEKNORA_API_KEY 是否设置正确"
+  "solution": "检查 X-Api-Key 请求头（HTTP/SSE）或 WEKNORA_API_KEY 环境变量（stdio）是否正确"
 }
 ```
 
@@ -338,13 +206,13 @@ python main.py --verbose
 ```json
 {
   "error": "Knowledge base not found",
-  "solution": "确认知识库ID是否正确，或先创建知识库"
+  "solution": "确认知识库 ID 或名称是否正确，先用 list_knowledge_bases 查看可用知识库"
 }
 ```
 
 ## 高级配置示例
 
-### 自定义检索配置
+### 自定义检索阈值
 ```json
 {
   "tool": "hybrid_search",
@@ -358,25 +226,12 @@ python main.py --verbose
 }
 ```
 
-### 自定义会话策略
-```json
-{
-  "tool": "create_session",
-  "arguments": {
-    "kb_id": "kb_123456",
-    "max_rounds": 20,
-    "enable_rewrite": true,
-    "fallback_response": "根据现有知识，我无法准确回答您的问题。请尝试重新表述或联系技术支持。"
-  }
-}
-```
-
 ## 性能优化建议
 
-1. **批量操作**: 尽量批量处理知识创建和更新
-2. **缓存策略**: 合理设置搜索阈值以平衡准确性和性能
-3. **会话管理**: 及时清理不需要的会话以节省资源
-4. **监控日志**: 使用 `--verbose` 选项监控性能指标
+1. **合理设置搜索阈值**：较高的阈值提升精确度但减少结果数量，按场景平衡
+2. **分页控制**：`list_*` 类工具使用 `page` / `page_size` 控制返回量
+3. **名称解析**：`hybrid_search` 等支持直接传入知识库名称，免去手动查 UUID
+4. **监控日志**：使用 `--verbose` 选项监控请求与性能指标
 
 ## 集成示例
 
@@ -405,7 +260,7 @@ python main.py --verbose
 ## 故障排除
 
 如果遇到问题：
-1. 运行 `python main.py --check-only` 检查环境
-2. 使用 `python main.py --verbose` 查看详细日志
-3. 检查 WeKnora 服务是否正常运行
-4. 验证网络连接和防火墙设置
+1. 运行 `python main.py --verbose` 查看详细日志
+2. 检查 WeKnora 服务是否正常运行
+3. 验证网络连接和防火墙设置
+4. 确认 API Key 具有对应资源的只读权限

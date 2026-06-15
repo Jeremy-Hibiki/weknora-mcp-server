@@ -104,49 +104,24 @@ python test_module.py
 
 ## 功能特性
 
-该 MCP 服务器提供以下工具：
-
-### 租户管理
-
-- `create_tenant` - 创建新租户
-- `list_tenants` - 列出所有租户
+该 MCP 服务器为**只读检索**服务器，提供对 WeKnora 知识库的查询能力（共 8 个工具）。不提供创建、删除、更新及聊天等写操作。
 
 ### 知识库管理
 
-- `create_knowledge_base` - 创建知识库
 - `list_knowledge_bases` - 列出知识库
 - `get_knowledge_base` - 获取知识库详情
-- `delete_knowledge_base` - 删除知识库
 - `hybrid_search` - 混合搜索
 
 ### 知识管理
 
-- `create_knowledge_from_url` - 从 URL 创建知识
 - `list_knowledge` - 列出知识
 - `get_knowledge` - 获取知识详情
-- `delete_knowledge` - 删除知识
 
-### 模型管理
+### Wiki 检索
 
-- `create_model` - 创建模型
-- `list_models` - 列出模型
-- `get_model` - 获取模型详情
-
-### 会话管理
-
-- `create_session` - 创建聊天会话
-- `get_session` - 获取会话详情
-- `list_sessions` - 列出会话
-- `delete_session` - 删除会话
-
-### 聊天功能
-
-- `chat` - 发送聊天消息
-
-### 块管理
-
-- `list_chunks` - 列出知识块
-- `delete_chunk` - 删除知识块
+- `wiki_search` - 搜索 Wiki 页面
+- `wiki_read_page` - 读取 Wiki 页面
+- `wiki_index_view` - 获取 Wiki 索引
 
 ## 故障排除
 
