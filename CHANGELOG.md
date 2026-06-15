@@ -11,6 +11,7 @@
 - 重构为只读检索服务器：移除全部创建/删除/更新工具及 `chat`/`agent_chat`，保留 16 个只读工具
 - 优化 `WeKnoraClient` 类型标注：新增 `_types/responses.py`，用 TypedDict 精确描述各端点响应结构（复用 `_types/weknora.py` 业务模型）
 - 精简工具返回：剥离 `code`/`message` 协议包裹，仅返回 `data` 业务载荷（新增 `_unwrap` helper）
+- 各 tool 进一步投影为 LLM 友好的精简视图（`KBSummary`/`SearchHit`/`KnowledgeSummary`/`KnowledgeDetail`/`WikiSearchEntry`/`WikiPageView`/`WikiIndexView`），剔除内部配置与冗余字段（chunking/storage 配置、`chunk_refs`、重复的知识摘要、搜索结果中的 wiki 全文等）
 - 清理 `WeKnoraClient` 中破坏性与聊天相关方法及 SSE 流处理逻辑（含 `WEKNORA_CHAT_TIMEOUT`）
 - 补全 `main.py` / `weknora_mcp_server.py` 函数类型注解，通过 mypy strict 检查
 - 修正 mypy `python_version` 为 3.10（与 `requires-python` 一致）

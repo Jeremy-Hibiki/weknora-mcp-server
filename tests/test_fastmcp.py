@@ -32,7 +32,7 @@ async def test_tools_registered(mcp_client: Client[FastMCPTransport]) -> None:
             {
                 "name": "list_knowledge_bases",
                 "title": None,
-                "description": "List all knowledge bases.",
+                "description": "List all knowledge bases (slim summary per KB).",
                 "inputSchema": {"additionalProperties": False, "properties": {}, "type": "object"},
                 "outputSchema": {
                     "properties": {"result": {"type": "string"}},
@@ -48,7 +48,7 @@ async def test_tools_registered(mcp_client: Client[FastMCPTransport]) -> None:
             {
                 "name": "get_knowledge_base",
                 "title": None,
-                "description": "Get knowledge base details.",
+                "description": "Get knowledge base details (slim summary).",
                 "inputSchema": {
                     "additionalProperties": False,
                     "properties": {"kb_id": {"description": "Knowledge base ID", "type": "string"}},
@@ -69,7 +69,7 @@ async def test_tools_registered(mcp_client: Client[FastMCPTransport]) -> None:
             {
                 "name": "hybrid_search",
                 "title": None,
-                "description": "Perform hybrid search in knowledge base.",
+                "description": "Perform hybrid search in knowledge base (slim hits).",
                 "inputSchema": {
                     "additionalProperties": False,
                     "properties": {
@@ -107,7 +107,7 @@ async def test_tools_registered(mcp_client: Client[FastMCPTransport]) -> None:
             {
                 "name": "list_knowledge",
                 "title": None,
-                "description": "List knowledge in a knowledge base.",
+                "description": "List knowledge in a knowledge base (slim summary per entry).",
                 "inputSchema": {
                     "additionalProperties": False,
                     "properties": {
@@ -132,7 +132,7 @@ async def test_tools_registered(mcp_client: Client[FastMCPTransport]) -> None:
             {
                 "name": "get_knowledge",
                 "title": None,
-                "description": "Get knowledge details.",
+                "description": "Get knowledge details (slim, with full abstract).",
                 "inputSchema": {
                     "additionalProperties": False,
                     "properties": {"knowledge_id": {"description": "Knowledge ID", "type": "string"}},
@@ -153,7 +153,7 @@ async def test_tools_registered(mcp_client: Client[FastMCPTransport]) -> None:
             {
                 "name": "wiki_search",
                 "title": None,
-                "description": "Search wiki pages by full-text query.\n\nReturns matching wiki pages with title, slug, summary, and content snippets.",
+                "description": "Search wiki pages by full-text query (slim entries: slug/title/page_type/summary).",
                 "inputSchema": {
                     "additionalProperties": False,
                     "properties": {
@@ -182,7 +182,7 @@ async def test_tools_registered(mcp_client: Client[FastMCPTransport]) -> None:
             {
                 "name": "wiki_read_page",
                 "title": None,
-                "description": "Read a wiki page by its slug.\n\nReturns full markdown content, metadata, inbound/outbound links, and source references.",
+                "description": "Read a wiki page by its slug (content + links, drop internal chunk refs).",
                 "inputSchema": {
                     "additionalProperties": False,
                     "properties": {
@@ -206,7 +206,7 @@ async def test_tools_registered(mcp_client: Client[FastMCPTransport]) -> None:
             {
                 "name": "wiki_index_view",
                 "title": None,
-                "description": "Get a structured wiki index with per-type directory groups.\n\nReturns an overview of all wiki pages organized by type (entity, concept, summary, etc.).",
+                "description": "Get a structured wiki index with per-type directory groups (slim).",
                 "inputSchema": {
                     "additionalProperties": False,
                     "properties": {
