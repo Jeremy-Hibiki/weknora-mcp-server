@@ -114,3 +114,25 @@ class SearchHit(TypedDict):
     knowledge_id: str
     knowledge_title: str
     chunk_index: int
+
+
+class WikiSearchEntry(TypedDict):
+    """wiki_search 的精简条目（不含全文 content）。"""
+
+    slug: str
+    title: str
+    page_type: str
+    summary: str
+
+
+class WikiPageView(TypedDict):
+    """wiki_read_page 的精简视图（含全文 content 与链接）。"""
+
+    slug: str
+    title: str
+    page_type: str
+    summary: str
+    content: str
+    aliases: list[str]
+    in_links: list[str]
+    out_links: list[str]

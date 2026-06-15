@@ -16,7 +16,7 @@ from ._types.responses import (
     KnowledgeDetailResponse,
     KnowledgeListResponse,
 )
-from ._types.weknora import WikiIndexResponse, WikiPage
+from ._types.weknora import WikiIndexResponse
 
 # Set up logging configuration for the MCP server
 logging.basicConfig(level=logging.INFO)
@@ -145,10 +145,10 @@ class WeKnoraClient:
 
     # Wiki Read-Only - Methods for querying LLM-generated wiki pages.
     # These endpoints return entities directly (no code/message envelope).
-    def wiki_search(self, kb_id: str, query: str, limit: int = 10) -> list[WikiPage]:
-        """Search wiki pages by full-text query"""
+    def wiki_search(self, kb_id: str, query: str, limit: int = 10) -> dict[str, Any]:
+        """Search wiki pages by full-text query. Returns ``{"pages": [...]}``."""
         return cast(
-            list[WikiPage],
+            dict[str, Any],
             self._request(
                 "GET",
                 f"/knowledgebase/{kb_id}/wiki/search",
@@ -156,9 +156,9 @@ class WeKnoraClient:
             ),
         )
 
-    def wiki_read_page(self, kb_id: str, slug: str) -> WikiPage:
-        """Read a wiki page by slug, returns full markdown + metadata + links"""
-        return cast(WikiPage, self._request("GET", f"/knowledgebase/{kb_id}/wiki/pages/{slug}"))
+    def wiki_read_page(self, kb_id: str, slug: str) -> dict[str, Any]:
+        """Read a wiki page by slug (full markdown + metadata + links)."""
+        return cast(dict[str, Any], self._request("GET", f"/knowledgebase/{kb_id}/wiki/pages/{slug}"))
 
     def wiki_index_view(self, kb_id: str, limit: int = 50) -> WikiIndexResponse:
         """Get structured wiki index with per-type directory groups"""

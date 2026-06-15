@@ -8,7 +8,14 @@ operations and chat pipelines are intentionally not exposed.
 """
 
 from ._client import WeKnoraClient
-from ._types.responses import KnowledgeDetail, KnowledgeSummary, KBSummary, SearchHit
+from ._types.responses import (
+    KnowledgeDetail,
+    KnowledgeSummary,
+    KBSummary,
+    SearchHit,
+    WikiPageView,
+    WikiSearchEntry,
+)
 
 from fastmcp.exceptions import AuthorizationError
 
@@ -186,6 +193,30 @@ def _search_hit(hit: Any) -> SearchHit:
     }
 
 
+def _wiki_search_entry(p: Any) -> WikiSearchEntry:
+    """Project a wiki search page to a browse entry (no full content)."""
+    return {
+        "slug": p.get("slug", ""),
+        "title": p.get("title", ""),
+        "page_type": p.get("page_type", ""),
+        "summary": p.get("summary", ""),
+    }
+
+
+def _wiki_page_view(p: Any) -> WikiPageView:
+    """Project a wiki page to the LLM-facing view (content + links, drop chunk refs)."""
+    return {
+        "slug": p.get("slug", ""),
+        "title": p.get("title", ""),
+        "page_type": p.get("page_type", ""),
+        "summary": p.get("summary", ""),
+        "content": p.get("content", ""),
+        "aliases": p.get("aliases") or [],
+        "in_links": p.get("in_links") or [],
+        "out_links": p.get("out_links") or [],
+    }
+
+
 # ── Knowledge Base Management ─────────────────────────────────────────────────
 
 
@@ -268,13 +299,10 @@ async def wiki_search(
     limit: Annotated[int, Field(description="Maximum number of results to return")] = 10,
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """Search wiki pages by full-text query.
-
-    Returns matching wiki pages with title, slug, summary, and content snippets.
-    """
-    return json.dumps(
-        _unwrap(client.wiki_search(client.resolve_kb_id(kb_id), query, limit)), indent=2, ensure_ascii=False
-    )
+    """Search wiki pages by full-text query (slim entries: slug/title/page_type/summary)."""
+    data = _unwrap(client.wiki_search(client.resolve_kb_id(kb_id), query, limit))
+    pages = data.get("pages", []) if isinstance(data, dict) else (data or [])
+    return json.dumps([_wiki_search_entry(p) for p in pages], indent=2, ensure_ascii=False)
 
 
 @mcp.tool()
@@ -283,11 +311,10 @@ async def wiki_read_page(
     slug: Annotated[str, Field(description="Page slug (e.g. 'entity/acme-corp', 'concept/rag')")],
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """Read a wiki page by its slug.
-
-    Returns full markdown content, metadata, inbound/outbound links, and source references.
-    """
-    return json.dumps(_unwrap(client.wiki_read_page(client.resolve_kb_id(kb_id), slug)), indent=2, ensure_ascii=False)
+    """Read a wiki page by its slug (content + links, drop internal chunk refs)."""
+    return json.dumps(
+        _wiki_page_view(_unwrap(client.wiki_read_page(client.resolve_kb_id(kb_id), slug))), indent=2, ensure_ascii=False
+    )
 
 
 @mcp.tool()
