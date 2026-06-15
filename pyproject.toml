@@ -1,0 +1,80 @@
+[project]
+name = "weknora-mcp-server"
+version = "1.0.0"
+description = "WeKnora MCP Server - Model Context Protocol server for WeKnora API"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "WeKnora Team", email = "support@weknora.com" }]
+maintainers = [{ name = "WeKnora Team", email = "support@weknora.com" }]
+keywords = [
+    "mcp",
+    "model-context-protocol",
+    "weknora",
+    "knowledge-management",
+    "api-server",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.10"
+dependencies = ["mcp>=1.0.0", "requests>=2.31.0"]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0",
+    "mypy>=1.0",
+    "ruff>=0.15.16",
+    "ty>=0.0.46",
+]
+
+[project.scripts]
+weknora-mcp-server = "weknora_mcp_server.main:sync_main"
+weknora-server = "weknora_mcp_server.run_server:main"
+
+[tool.uv]
+package = true
+
+[[tool.uv.index]]
+name = "tuna"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+default = true
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+extend-exclude = ["*.pyi"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+asyncio_mode = "auto"
