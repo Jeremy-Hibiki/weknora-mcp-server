@@ -9,32 +9,76 @@ WeKnora MCP Server 主入口点
 3. weknora-mcp-server (安装后)
 """
 
+from starlette.types import ASGIApp, Scope, Receive, Send
+
+from starlette.responses import JSONResponse
+
+from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware import Middleware
+
 import argparse
 import asyncio
 import os
 import sys
-from pathlib import Path
+
+from .weknora_mcp_server import run_stdio, run_sse, run_http, mcp
 
 
-def setup_environment():
-    """设置环境和路径"""
-    # 确保当前目录在 Python 路径中
-    current_dir = Path(__file__).parent.absolute()
-    if str(current_dir) not in sys.path:
-        sys.path.insert(0, str(current_dir))
+class ApiKeyASGIMiddleware:
+    def __init__(
+        self,
+        app: ASGIApp,
+        exclude_paths: set[str] | None = None,
+    ):
+        self.app = app
+        self.exclude_paths = exclude_paths or set()
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        # 只拦截 HTTP 请求，WebSocket / lifespan 直接放行
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        path = scope.get("path", "")
+
+        if path in self.exclude_paths:
+            await self.app(scope, receive, send)
+            return
+
+        headers = dict(scope.get("headers", []))
+        x_api_key = headers.get(b"x-api-key")
+
+        if not x_api_key:
+            response = JSONResponse(
+                {"detail": "Missing X-Api-Key header"},
+                status_code=401,
+            )
+            await response(scope, receive, send)
+            return
+
+        await self.app(scope, receive, send)
 
 
-def check_dependencies():
-    """检查依赖是否已安装"""
-    try:
-        import mcp
-        import requests
-
-        return True
-    except ImportError as e:
-        print(f"缺少依赖: {e}")
-        print("请运行: pip install -r requirements.txt")
-        return False
+app = mcp.http_app(
+    middleware=[
+        Middleware(
+            CORSMiddleware,
+            allow_origins=["*"],  # Allow all origins; use specific origins for security
+            allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+            allow_headers=[
+                "mcp-protocol-version",
+                "mcp-session-id",
+                "Authorization",
+                "Content-Type",
+            ],
+            expose_headers=["mcp-session-id"],
+        ),
+        Middleware(
+            ApiKeyASGIMiddleware,
+            exclude_paths={"/health", "/healthz"},
+        ),
+    ]
+)
 
 
 def check_environment_variables():
@@ -44,13 +88,14 @@ def check_environment_variables():
 
     print("=== WeKnora MCP Server 环境检查 ===")
     print(f"Base URL: {base_url or 'http://localhost:8080/api/v1 (默认)'}")
-    print(f"API Key: {'已设置' if api_key else '未设置 (警告)'}")
+    print(f"API Key (env fallback): {'已设置' if api_key else '未设置'}")
+    print("HTTP/SSE 模式: 客户端应通过 X-API-Key 请求头传递 API Key")
 
     if not base_url:
         print("提示: 可以设置 WEKNORA_BASE_URL 环境变量")
 
     if not api_key:
-        print("警告: 建议设置 WEKNORA_API_KEY 环境变量")
+        print("提示: stdio 模式可设置 WEKNORA_API_KEY；HTTP 模式请使用 X-API-Key 请求头")
 
     print("=" * 40)
     return True
@@ -61,24 +106,18 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         description="WeKnora MCP Server - Model Context Protocol server for WeKnora API",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-示例:
-  python main.py                    # 使用默认配置启动
-  python main.py --check-only       # 仅检查环境，不启动服务器
-  python main.py --verbose          # 启用详细日志
-
-环境变量:
-  WEKNORA_BASE_URL    WeKnora API 基础 URL (默认: http://localhost:8080/api/v1)
-  WEKNORA_API_KEY     WeKnora API 密钥
-        """,
     )
-
-    parser.add_argument("--check-only", action="store_true", help="仅检查环境配置，不启动服务器")
-
-    parser.add_argument("--verbose", "-v", action="store_true", help="启用详细日志输出")
-
-    parser.add_argument("--version", action="version", version="WeKnora MCP Server 1.0.0")
-
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="启用详细日志输出",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="WeKnora MCP Server 1.0.0",
+    )
     parser.add_argument(
         "--transport",
         choices=["stdio", "sse", "http"],
@@ -104,20 +143,8 @@ async def main():
     """主函数"""
     args = parse_arguments()
 
-    # 设置环境
-    setup_environment()
-
-    # 检查依赖
-    if not check_dependencies():
-        sys.exit(1)
-
     # 检查环境变量
     check_environment_variables()
-
-    # 如果只是检查环境，则退出
-    if args.check_only:
-        print("环境检查完成。")
-        return
 
     # 设置日志级别
     if args.verbose:
@@ -128,8 +155,6 @@ async def main():
 
     try:
         print(f"正在启动 WeKnora MCP Server (transport={args.transport})...")
-
-        from .weknora_mcp_server import run_stdio, run_sse, run_http
 
         # Select transport mode based on CLI argument or MCP_TRANSPORT env var
         # - stdio: Default, used by VS Code Copilot for local integration
@@ -147,7 +172,6 @@ async def main():
 
     except ImportError as e:
         print(f"导入错误: {e}")
-        print("请确保所有文件都在正确的位置")
         sys.exit(1)
     except KeyboardInterrupt:
         print("\n服务器已停止")

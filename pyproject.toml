@@ -29,13 +29,18 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 requires-python = ">=3.10"
-dependencies = ["mcp>=1.0.0", "requests>=2.31.0"]
+dependencies = [
+    "fastmcp>=3.0.0",
+    "pydantic>=2.13.4",
+    "requests>=2.31.0",
+]
 
 [dependency-groups]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.0",
+    "inline-snapshot>=0.34.1",
     "mypy>=1.0",
     "ruff>=0.15.16",
     "ty>=0.0.46",
@@ -43,7 +48,6 @@ dev = [
 
 [project.scripts]
 weknora-mcp-server = "weknora_mcp_server.main:sync_main"
-weknora-server = "weknora_mcp_server.run_server:main"
 
 [tool.uv]
 package = true
