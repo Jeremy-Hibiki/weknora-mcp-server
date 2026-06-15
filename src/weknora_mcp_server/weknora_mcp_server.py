@@ -13,6 +13,7 @@ from ._types.responses import (
     KnowledgeSummary,
     KBSummary,
     SearchHit,
+    WikiIndexView,
     WikiPageView,
     WikiSearchEntry,
 )
@@ -29,7 +30,7 @@ import asyncio
 import json
 import logging
 import os
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 from fastmcp.dependencies import CurrentContext, Depends
 from fastmcp.server.context import Context
@@ -217,6 +218,27 @@ def _wiki_page_view(p: Any) -> WikiPageView:
     }
 
 
+def _wiki_index_view(data: Any) -> WikiIndexView:
+    """Project the wiki index: keep version + groups (type/total/items),
+    drop the auto-generated intro blurb and pagination cursors."""
+    groups = [
+        {
+            "type": g.get("type", ""),
+            "total": g.get("total", 0),
+            "items": [
+                {
+                    "slug": it.get("slug", ""),
+                    "title": it.get("title", ""),
+                    "summary": it.get("summary", ""),
+                }
+                for it in (g.get("items") or [])
+            ],
+        }
+        for g in (data.get("groups") or [])
+    ]
+    return cast(WikiIndexView, {"version": data.get("version", 0), "groups": groups})
+
+
 # ── Knowledge Base Management ─────────────────────────────────────────────────
 
 
@@ -323,11 +345,12 @@ async def wiki_index_view(
     limit: Annotated[int, Field(description="Maximum items per type group")] = 50,
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """Get a structured wiki index with per-type directory groups.
-
-    Returns an overview of all wiki pages organized by type (entity, concept, summary, etc.).
-    """
-    return json.dumps(_unwrap(client.wiki_index_view(client.resolve_kb_id(kb_id), limit)), indent=2, ensure_ascii=False)
+    """Get a structured wiki index with per-type directory groups (slim)."""
+    return json.dumps(
+        _wiki_index_view(_unwrap(client.wiki_index_view(client.resolve_kb_id(kb_id), limit))),
+        indent=2,
+        ensure_ascii=False,
+    )
 
 
 # ── Transport helpers ─────────────────────────────────────────────────────────

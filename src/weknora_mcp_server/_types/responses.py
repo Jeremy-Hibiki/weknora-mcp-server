@@ -136,3 +136,22 @@ class WikiPageView(TypedDict):
     aliases: list[str]
     in_links: list[str]
     out_links: list[str]
+
+
+class WikiIndexItem(TypedDict):
+    slug: str
+    title: str
+    summary: str
+
+
+class WikiIndexGroup(TypedDict):
+    type: str
+    total: int
+    items: list[WikiIndexItem]
+
+
+class WikiIndexView(TypedDict):
+    """wiki_index_view 的精简视图（去自动生成 intro 与分页 cursor）。"""
+
+    version: int
+    groups: list[WikiIndexGroup]
