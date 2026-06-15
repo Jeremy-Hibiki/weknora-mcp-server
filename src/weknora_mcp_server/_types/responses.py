@@ -75,3 +75,31 @@ class KBSummary(TypedDict):
     capabilities: dict[str, bool]
     created_at: str
     updated_at: str
+
+
+class KnowledgeSummary(TypedDict):
+    """list_knowledge 的精简视图（浏览用，不含长摘要）。"""
+
+    id: str
+    title: str
+    file_name: str
+    file_type: str
+    file_size: int
+    parse_status: str
+    summary_status: str
+    created_at: str
+
+
+class KnowledgeDetail(TypedDict):
+    """get_knowledge 的精简视图（含完整摘要）。"""
+
+    id: str
+    title: str
+    description: str
+    file_name: str
+    file_type: str
+    file_size: int
+    parse_status: str
+    summary_status: str
+    created_at: str
+    updated_at: str

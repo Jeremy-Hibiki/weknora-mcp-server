@@ -8,7 +8,7 @@ operations and chat pipelines are intentionally not exposed.
 """
 
 from ._client import WeKnoraClient
-from ._types.responses import KBSummary
+from ._types.responses import KnowledgeDetail, KnowledgeSummary, KBSummary
 
 from fastmcp.exceptions import AuthorizationError
 
@@ -139,6 +139,36 @@ def _kb_summary(kb: Any) -> KBSummary:
     }
 
 
+def _knowledge_summary(k: Any) -> KnowledgeSummary:
+    """Project a knowledge entry to a browse-friendly summary (no long abstract)."""
+    return {
+        "id": k.get("id", ""),
+        "title": k.get("title", ""),
+        "file_name": k.get("file_name", ""),
+        "file_type": k.get("file_type", ""),
+        "file_size": k.get("file_size", 0),
+        "parse_status": k.get("parse_status", ""),
+        "summary_status": k.get("summary_status", ""),
+        "created_at": k.get("created_at", ""),
+    }
+
+
+def _knowledge_detail(k: Any) -> KnowledgeDetail:
+    """Project a knowledge entry to a detail view (includes the full abstract)."""
+    return {
+        "id": k.get("id", ""),
+        "title": k.get("title", ""),
+        "description": k.get("description", ""),
+        "file_name": k.get("file_name", ""),
+        "file_type": k.get("file_type", ""),
+        "file_size": k.get("file_size", 0),
+        "parse_status": k.get("parse_status", ""),
+        "summary_status": k.get("summary_status", ""),
+        "created_at": k.get("created_at", ""),
+        "updated_at": k.get("updated_at", ""),
+    }
+
+
 # ── Knowledge Base Management ─────────────────────────────────────────────────
 
 
@@ -155,7 +185,9 @@ async def get_knowledge_base(
     client: WeKnoraClient = ClientDependency,
 ) -> str:
     """Get knowledge base details (slim summary)."""
-    return json.dumps(_kb_summary(_unwrap(client.get_knowledge_base(client.resolve_kb_id(kb_id)))), indent=2, ensure_ascii=False)
+    return json.dumps(
+        _kb_summary(_unwrap(client.get_knowledge_base(client.resolve_kb_id(kb_id)))), indent=2, ensure_ascii=False
+    )
 
 
 @mcp.tool()
@@ -198,12 +230,9 @@ async def list_knowledge(
     page_size: Annotated[int, Field(description="Page size")] = 20,
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """List knowledge in a knowledge base."""
-    return json.dumps(
-        _unwrap(client.list_knowledge(client.resolve_kb_id(kb_id), page, page_size)),
-        indent=2,
-        ensure_ascii=False,
-    )
+    """List knowledge in a knowledge base (slim summary per entry)."""
+    data = _unwrap(client.list_knowledge(client.resolve_kb_id(kb_id), page, page_size))
+    return json.dumps([_knowledge_summary(k) for k in (data or [])], indent=2, ensure_ascii=False)
 
 
 @mcp.tool()
@@ -211,8 +240,8 @@ async def get_knowledge(
     knowledge_id: Annotated[str, Field(description="Knowledge ID")],
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """Get knowledge details."""
-    return json.dumps(_unwrap(client.get_knowledge(knowledge_id)), indent=2, ensure_ascii=False)
+    """Get knowledge details (slim, with full abstract)."""
+    return json.dumps(_knowledge_detail(_unwrap(client.get_knowledge(knowledge_id))), indent=2, ensure_ascii=False)
 
 
 # ── Wiki Read-Only ────────────────────────────────────────────────────────────
@@ -229,7 +258,9 @@ async def wiki_search(
 
     Returns matching wiki pages with title, slug, summary, and content snippets.
     """
-    return json.dumps(_unwrap(client.wiki_search(client.resolve_kb_id(kb_id), query, limit)), indent=2, ensure_ascii=False)
+    return json.dumps(
+        _unwrap(client.wiki_search(client.resolve_kb_id(kb_id), query, limit)), indent=2, ensure_ascii=False
+    )
 
 
 @mcp.tool()
