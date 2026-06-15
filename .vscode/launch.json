@@ -1,0 +1,43 @@
+{
+  // 使用 IntelliSense 了解相关属性。
+  // 悬停以查看现有属性的描述。
+  // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python Debugger: MCP ASGI Server",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "weknora_mcp_server.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8008"
+      ],
+      "env": {
+        "WEKNORA_BASE_URL": "http://192.168.131.52:58000/api/v1",
+      },
+      "jinja": true
+    },
+    {
+      "name": "Python Debugger: Lauch MCP Server",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "weknora_mcp_server.main",
+      "args": [
+        "--transport",
+        "http",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8008"
+      ],
+      "env": {
+        "WEKNORA_BASE_URL": "http://192.168.131.52:58000/api/v1",
+      },
+      "justMyCode": false,
+    }
+  ]
+}
