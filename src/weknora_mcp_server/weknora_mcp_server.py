@@ -36,6 +36,7 @@ from fastmcp.dependencies import CurrentContext, Depends
 from fastmcp.server.context import Context
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 from pydantic import Field
 
 # Set up logging configuration for the MCP server
@@ -112,6 +113,16 @@ class InjectApiKeyMiddleware(Middleware):
 mcp = FastMCP(
     "weknora-server",
     middleware=[InjectApiKeyMiddleware()],
+)
+
+# All exposed tools are read-only retrieval with no side effects; they query the
+# external WeKnora backend. Reusing one annotations instance keeps MCP hints
+# consistent across every tool.
+READ_ONLY_ANNOTATIONS = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=True,
 )
 
 
@@ -242,14 +253,14 @@ def _wiki_index_view(data: Any) -> WikiIndexView:
 # ── Knowledge Base Management ─────────────────────────────────────────────────
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY_ANNOTATIONS)
 async def list_knowledge_bases(client: WeKnoraClient = ClientDependency) -> str:
     """List all knowledge bases."""
     data = _unwrap(client.list_knowledge_bases())
     return json.dumps([_kb_summary(kb) for kb in (data or [])], indent=2, ensure_ascii=False)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY_ANNOTATIONS)
 async def get_knowledge_base(
     kb_id: Annotated[str, Field(description="Knowledge base ID")],
     client: WeKnoraClient = ClientDependency,
@@ -260,7 +271,7 @@ async def get_knowledge_base(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY_ANNOTATIONS)
 async def hybrid_search(
     kb_id: Annotated[
         str,
@@ -290,7 +301,7 @@ async def hybrid_search(
 # ── Knowledge Management ──────────────────────────────────────────────────────
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY_ANNOTATIONS)
 async def list_knowledge(
     kb_id: Annotated[str, Field(description="Knowledge base ID")],
     page: Annotated[int, Field(description="Page number")] = 1,
@@ -302,7 +313,7 @@ async def list_knowledge(
     return json.dumps([_knowledge_summary(k) for k in (data or [])], indent=2, ensure_ascii=False)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY_ANNOTATIONS)
 async def get_knowledge(
     knowledge_id: Annotated[str, Field(description="Knowledge ID")],
     client: WeKnoraClient = ClientDependency,
@@ -314,7 +325,7 @@ async def get_knowledge(
 # ── Wiki Read-Only ────────────────────────────────────────────────────────────
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY_ANNOTATIONS)
 async def wiki_search(
     kb_id: Annotated[str, Field(description="Knowledge base ID")],
     query: Annotated[str, Field(description="Search query text")],
@@ -330,7 +341,7 @@ async def wiki_search(
     return json.dumps([_wiki_search_entry(p) for p in pages], indent=2, ensure_ascii=False)
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY_ANNOTATIONS)
 async def wiki_read_page(
     kb_id: Annotated[str, Field(description="Knowledge base ID")],
     slug: Annotated[str, Field(description="Page slug (e.g. 'entity/acme-corp', 'concept/rag')")],
@@ -345,7 +356,7 @@ async def wiki_read_page(
     )
 
 
-@mcp.tool()
+@mcp.tool(annotations=READ_ONLY_ANNOTATIONS)
 async def wiki_index_view(
     kb_id: Annotated[str, Field(description="Knowledge base ID")],
     limit: Annotated[int, Field(description="Maximum items per type group")] = 50,

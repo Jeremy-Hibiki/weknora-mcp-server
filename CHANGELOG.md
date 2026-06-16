@@ -16,6 +16,7 @@
 - 补全 `main.py` / `weknora_mcp_server.py` 函数类型注解，通过 mypy strict 检查
 - 修正 mypy `python_version` 为 3.10（与 `requires-python` 一致）
 - 为 inline-snapshot 配置 `format-command = "ruff format"`
+- 为所有 tool 标注 MCP `annotations`（`readOnlyHint=True` / `destructiveHint=False` / `idempotentHint=True` / `openWorldHint=True`），声明只读语义
 
 ### 移除的工具
 - `create_tenant`、`create_knowledge_base`、`create_knowledge_from_file`、`create_knowledge_from_url`、`create_model`、`create_session`
