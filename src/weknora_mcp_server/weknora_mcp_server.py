@@ -110,6 +110,7 @@ class InjectApiKeyMiddleware(Middleware):
 
 mcp = FastMCP(
     "weknora-server",
+    version=2.0,
     middleware=[InjectApiKeyMiddleware()],
 )
 
@@ -350,7 +351,9 @@ async def wiki_read_page(
     Returns full markdown content, metadata, inbound/outbound links.
     """
     return json.dumps(
-        _wiki_page_view(_unwrap(client.wiki_read_page(client.resolve_kb_id(kb_id), slug))), indent=2, ensure_ascii=False
+        _wiki_page_view(_unwrap(client.wiki_read_page(client.resolve_kb_id(kb_id), slug))),
+        indent=2,
+        ensure_ascii=False,
     )
 
 
