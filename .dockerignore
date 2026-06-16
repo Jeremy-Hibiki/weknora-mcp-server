@@ -1,0 +1,27 @@
+# VCS
+.git/
+.gitignore
+
+# Secrets & local config — must never enter the image
+.env
+.mcp.json
+
+# Local tooling state
+.serena/
+.vscode/
+
+# Python caches / venvs
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Docs / design specs not needed at runtime
+docs/
