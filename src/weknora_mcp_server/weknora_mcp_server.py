@@ -284,7 +284,7 @@ async def hybrid_search(
     query: Annotated[str, Field(description="Search query")],
     vector_threshold: Annotated[float, Field(description="Vector similarity threshold")] = 0.5,
     keyword_threshold: Annotated[float, Field(description="Keyword match threshold")] = 0.3,
-    match_count: Annotated[int, Field(description="Number of results to return")] = 5,
+    match_count: Annotated[int, Field(description="Number of results to return")] = 10,
     client: WeKnoraClient = ClientDependency,
 ) -> str:
     """Perform hybrid search in knowledge base."""
