@@ -244,7 +244,7 @@ def _wiki_index_view(data: Any) -> WikiIndexView:
 
 @mcp.tool()
 async def list_knowledge_bases(client: WeKnoraClient = ClientDependency) -> str:
-    """List all knowledge bases (slim summary per KB)."""
+    """List all knowledge bases."""
     data = _unwrap(client.list_knowledge_bases())
     return json.dumps([_kb_summary(kb) for kb in (data or [])], indent=2, ensure_ascii=False)
 
@@ -254,7 +254,7 @@ async def get_knowledge_base(
     kb_id: Annotated[str, Field(description="Knowledge base ID")],
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """Get knowledge base details (slim summary)."""
+    """Get knowledge base details."""
     return json.dumps(
         _kb_summary(_unwrap(client.get_knowledge_base(client.resolve_kb_id(kb_id)))), indent=2, ensure_ascii=False
     )
@@ -277,7 +277,7 @@ async def hybrid_search(
     match_count: Annotated[int, Field(description="Number of results to return")] = 5,
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """Perform hybrid search in knowledge base (slim hits)."""
+    """Perform hybrid search in knowledge base."""
     config = {
         "vector_threshold": vector_threshold,
         "keyword_threshold": keyword_threshold,
@@ -297,7 +297,7 @@ async def list_knowledge(
     page_size: Annotated[int, Field(description="Page size")] = 20,
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """List knowledge in a knowledge base (slim summary per entry)."""
+    """List knowledge in a knowledge base."""
     data = _unwrap(client.list_knowledge(client.resolve_kb_id(kb_id), page, page_size))
     return json.dumps([_knowledge_summary(k) for k in (data or [])], indent=2, ensure_ascii=False)
 
@@ -307,7 +307,7 @@ async def get_knowledge(
     knowledge_id: Annotated[str, Field(description="Knowledge ID")],
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """Get knowledge details (slim, with full abstract)."""
+    """Get knowledge details."""
     return json.dumps(_knowledge_detail(_unwrap(client.get_knowledge(knowledge_id))), indent=2, ensure_ascii=False)
 
 
@@ -321,7 +321,10 @@ async def wiki_search(
     limit: Annotated[int, Field(description="Maximum number of results to return")] = 10,
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """Search wiki pages by full-text query (slim entries: slug/title/page_type/summary)."""
+    """Search wiki pages by full-text query.
+
+    Returns matching wiki pages with title, slug, and summary.
+    """
     data = _unwrap(client.wiki_search(client.resolve_kb_id(kb_id), query, limit))
     pages = data.get("pages", []) if isinstance(data, dict) else (data or [])
     return json.dumps([_wiki_search_entry(p) for p in pages], indent=2, ensure_ascii=False)
@@ -333,7 +336,10 @@ async def wiki_read_page(
     slug: Annotated[str, Field(description="Page slug (e.g. 'entity/acme-corp', 'concept/rag')")],
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """Read a wiki page by its slug (content + links, drop internal chunk refs)."""
+    """Read a wiki page by its slug.
+
+    Returns full markdown content, metadata, inbound/outbound links.
+    """
     return json.dumps(
         _wiki_page_view(_unwrap(client.wiki_read_page(client.resolve_kb_id(kb_id), slug))), indent=2, ensure_ascii=False
     )
@@ -345,7 +351,10 @@ async def wiki_index_view(
     limit: Annotated[int, Field(description="Maximum items per type group")] = 50,
     client: WeKnoraClient = ClientDependency,
 ) -> str:
-    """Get a structured wiki index with per-type directory groups (slim)."""
+    """Get a structured wiki index with per-type directory groups.
+
+    Returns an overview of all wiki pages organized by type (entity, concept, summary, etc.).
+    """
     return json.dumps(
         _wiki_index_view(_unwrap(client.wiki_index_view(client.resolve_kb_id(kb_id), limit))),
         indent=2,
