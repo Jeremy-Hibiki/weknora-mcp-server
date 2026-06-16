@@ -4,12 +4,10 @@
 
 ## 快速开始
 
-> 推荐直接参考 [MCP配置说明](./docs/MCP_CONFIG.md)，无需进行以下操作。
-
 ### 1. 安装依赖
 
 ```bash
-pip install -r requirements.txt
+uv sync --frozen --no-install-project --no-dev
 ```
 
 ### 2. 配置环境变量
@@ -17,48 +15,12 @@ pip install -r requirements.txt
 ```bash
 # Linux/macOS
 export WEKNORA_BASE_URL="http://localhost:8080/api/v1"
-export WEKNORA_API_KEY="your_api_key_here"
 
 # Windows PowerShell
 $env:WEKNORA_BASE_URL="http://localhost:8080/api/v1"
-$env:WEKNORA_API_KEY="your_api_key_here"
 
 # Windows CMD
 set WEKNORA_BASE_URL=http://localhost:8080/api/v1
-set WEKNORA_API_KEY=your_api_key_here
-```
-
-### 3. 运行服务器
-
-**推荐方式 - 使用主入口点：**
-
-```bash
-python main.py
-```
-
-**其他运行方式：**
-
-```bash
-# 使用原始启动脚本
-python run_server.py
-
-# 使用便捷脚本
-python run.py
-
-# 直接运行服务器模块
-python weknora_mcp_server.py
-
-# 作为 Python 模块运行
-python -m weknora_mcp_server
-```
-
-### 4. 命令行选项
-
-```bash
-python main.py --help                 # 显示帮助信息
-python main.py --check-only           # 仅检查环境配置
-python main.py --verbose              # 启用详细日志
-python main.py --version              # 显示版本信息
 ```
 
 ## 安装为 Python 包
@@ -73,8 +35,6 @@ pip install -e .
 
 ```bash
 weknora-mcp-server
-# 或
-weknora-server
 ```
 
 ### 生产模式安装
@@ -86,12 +46,7 @@ pip install .
 ### 构建分发包
 
 ```bash
-# 使用 setuptools
-python setup.py sdist bdist_wheel
-
-# 使用现代构建工具
-pip install build
-python -m build
+uv build
 ```
 
 ## 测试模组
@@ -99,7 +54,7 @@ python -m build
 运行测试脚本验证模组是否正常工作：
 
 ```bash
-python test_module.py
+uv run pytest
 ```
 
 ## 功能特性
@@ -122,14 +77,6 @@ python test_module.py
 - `wiki_search` - 搜索 Wiki 页面
 - `wiki_read_page` - 读取 Wiki 页面
 - `wiki_index_view` - 获取 Wiki 索引
-
-## 故障排除
-
-如果遇到导入错误，请确保：
-
-1. 已安装所有必需的依赖包
-2. Python 版本兼容（推荐 3.10+）
-3. 没有文件名冲突（避免使用 `mcp.py` 作为文件名）
 
 ## 调用效果
 

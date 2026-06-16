@@ -4,8 +4,8 @@ version = "1.0.0"
 description = "WeKnora MCP Server - Model Context Protocol server for WeKnora API"
 readme = "README.md"
 license = { text = "MIT" }
-authors = [{ name = "WeKnora Team", email = "support@weknora.com" }]
-maintainers = [{ name = "WeKnora Team", email = "support@weknora.com" }]
+authors = [{ name = "Jeremy", email = "JeremyJiang430@outlook.com" }]
+maintainers = [{ name = "Jeremy", email = "JeremyJiang430@outlook.com" }]
 keywords = [
     "mcp",
     "model-context-protocol",
@@ -29,11 +29,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 requires-python = ">=3.10"
-dependencies = [
-    "fastmcp>=3.0.0",
-    "pydantic>=2.13.4",
-    "requests>=2.31.0",
-]
+dependencies = ["fastmcp>=3.0.0", "pydantic>=2.13.4", "requests>=2.31.0"]
 
 [dependency-groups]
 dev = [
