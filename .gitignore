@@ -8,3 +8,10 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Secrets & local MCP config (contain API keys / localhost endpoints)
+.env
+.mcp.json
+
+# Local tooling state
+.serena/

@@ -1,277 +1,52 @@
-# WeKnora MCP Server 可运行模组包 - 项目总结
+# WeKnora MCP Server - 项目总结
 
-## 🎉 项目完成状态
+只读检索 MCP 服务器，基于 FastMCP，提供对 WeKnora 知识库的查询能力。
 
-✅ **所有测试通过** - 模组已成功打包并可正常运行
-
-## 📁 项目结构
+## 项目结构
 
 ```
-WeKnoraMCP/
-├── 📦 核心文件
-│   ├── __init__.py              # 包初始化文件
-│   ├── weknora_mcp_server.py   # MCP 服务器核心实现
-│   └── requirements.txt        # 项目依赖
-│
-├── 🚀 启动脚本 (多种方式)
-│   ├── main.py                 # 主入口点 (推荐) ⭐
-│   ├── run_server.py          # 原始启动脚本
-│   └── run.py                 # 便捷启动脚本
-│
-├── 📋 配置文件
-│   ├── setup.py               # 传统安装脚本
-│   ├── pyproject.toml         # 现代项目配置
-│   └── MANIFEST.in            # 包含文件清单
-│
-├── 🧪 测试文件
-│   ├── test_module.py         # 模组功能测试
-│   └── test_imports.py        # 导入测试
-│
-├── 📚 文档文件
-│   ├── README.md              # 项目说明
-│   ├── INSTALL.md             # 详细安装指南
-│   ├── EXAMPLES.md            # 使用示例
-│   ├── CHANGELOG.md           # 更新日志
-│   ├── PROJECT_SUMMARY.md     # 项目总结 (本文件)
-│   └── LICENSE                # MIT 许可证
-│
-└── 📂 其他
-    ├── __pycache__/           # Python 缓存 (自动生成)
-    ├── .codebuddy/           # CodeBuddy 配置
-    └── .venv/                # 虚拟环境 (可选)
+weknora-mcp-server/
+├── src/weknora_mcp_server/
+│   ├── main.py                  # HTTP/SSE 入口（ASGI app + CLI）
+│   ├── weknora_mcp_server.py    # MCP server + 8 个只读 tool
+│   ├── _client.py               # WeKnoraClient（只读）
+│   └── _types/
+│       ├── weknora.py           # openapi 生成的业务模型（TypedDict）
+│       ├── responses.py         # 响应 / 精简视图 TypedDict
+│       └── openapi.json         # WeKnora API 定义
+├── tests/test_fastmcp.py        # inline-snapshot 工具测试
+├── docs/                        # 文档
+├── Dockerfile                   # uv 镜像（http）
+├── pyproject.toml / uv.lock     # uv 项目配置
+└── README.md / CHANGELOG.md
 ```
 
-## 🚀 启动方式 (7种)
+## 功能特性
 
-### 1. 主入口点 (推荐) ⭐
-```bash
-python main.py                    # 基本启动
-python main.py --check-only       # 仅检查环境
-python main.py --verbose          # 详细日志
-python main.py --help            # 显示帮助
-```
+### MCP 工具（8 个，只读检索）
+- **知识库**：`list_knowledge_bases`、`get_knowledge_base`、`hybrid_search`
+- **知识**：`list_knowledge`、`get_knowledge`
+- **Wiki**：`wiki_search`、`wiki_read_page`、`wiki_index_view`
 
-### 2. 原始启动脚本
-```bash
-python run_server.py
-```
-
-### 3. 便捷启动脚本
-```bash
-python run.py
-```
-
-### 4. 直接运行服务器
-```bash
-python weknora_mcp_server.py
-```
-
-### 5. 作为模块运行
-```bash
-python -m weknora_mcp_server
-```
-
-### 6. 安装后命令行工具
-```bash
-pip install -e .                  # 开发模式安装
-weknora-mcp-server               # 主命令
-weknora-server                   # 别名命令
-```
-
-### 7. 生产环境安装
-```bash
-pip install .                    # 生产安装
-weknora-mcp-server              # 全局命令
-```
-
-## 🔧 环境配置
-
-### 必需环境变量
-```bash
-# Linux/macOS
-export WEKNORA_BASE_URL="http://localhost:8080/api/v1"
-export WEKNORA_API_KEY="your_api_key_here"
-
-# Windows PowerShell
-$env:WEKNORA_BASE_URL="http://localhost:8080/api/v1"
-$env:WEKNORA_API_KEY="your_api_key_here"
-
-# Windows CMD
-set WEKNORA_BASE_URL=http://localhost:8080/api/v1
-set WEKNORA_API_KEY=your_api_key_here
-```
-
-## 🛠️ 功能特性
-
-### MCP 工具 (21个)
-- **租户管理**: `create_tenant`, `list_tenants`
-- **知识库管理**: `create_knowledge_base`, `list_knowledge_bases`, `get_knowledge_base`, `delete_knowledge_base`, `hybrid_search`
-- **知识管理**: `create_knowledge_from_url`, `list_knowledge`, `get_knowledge`, `delete_knowledge`
-- **模型管理**: `create_model`, `list_models`, `get_model`
-- **会话管理**: `create_session`, `get_session`, `list_sessions`, `delete_session`
-- **聊天功能**: `chat`
-- **块管理**: `list_chunks`, `delete_chunk`
+所有工具标注 MCP `annotations`（`readOnlyHint=True` / `destructiveHint=False` / `idempotentHint=True` / `openWorldHint=True`），返回经精简投影（剥离协议包裹与内部字段）。
 
 ### 技术特性
-- ✅ 异步 I/O 支持
-- ✅ 完整错误处理
-- ✅ 详细日志记录
-- ✅ 环境变量配置
-- ✅ 命令行参数支持
-- ✅ 多种安装方式
-- ✅ 开发和生产模式
-- ✅ 完整测试覆盖
+- 网络传输：`http`（默认）/ `sse`（不支持 stdio）
+- 类型严格：mypy strict + ruff 全绿
+- TypedDict 描述响应与精简视图结构
+- uv 管理依赖，可复现构建
 
-## 📦 安装方式
+## 安装与运行
 
-### 快速开始
+详见 [INSTALL.md](./INSTALL.md) 与 [MCP_CONFIG.md](./MCP_CONFIG.md)。
+
 ```bash
-# 1. 安装依赖
-pip install -r requirements.txt
-
-# 2. 设置环境变量
-export WEKNORA_BASE_URL="http://localhost:8080/api/v1"
-export WEKNORA_API_KEY="your_api_key"
-
-# 3. 启动服务器
-python main.py
+uv sync --frozen
+uv run weknora-mcp-server            # http://0.0.0.0:8000/mcp
 ```
 
-### 开发模式安装
-```bash
-pip install -e .
-weknora-mcp-server
-```
+## 兼容性
 
-### 生产模式安装
-```bash
-pip install .
-weknora-mcp-server
-```
-
-### 构建分发包
-```bash
-# 传统方式
-python setup.py sdist bdist_wheel
-
-# 现代方式
-pip install build
-python -m build
-```
-
-## 🧪 测试验证
-
-### 运行完整测试
-```bash
-python test_module.py
-```
-
-### 测试结果
-```
-WeKnora MCP Server 模组测试
-==================================================
-✓ 模块导入测试通过
-✓ 环境配置测试通过  
-✓ 客户端创建测试通过
-✓ 文件结构测试通过
-✓ 入口点测试通过
-✓ 包安装测试通过
-==================================================
-测试结果: 6/6 通过
-✓ 所有测试通过！模组可以正常使用。
-```
-
-## 🔍 兼容性
-
-### Python 版本
-- ✅ Python 3.10+
-- ✅ Python 3.11
-- ✅ Python 3.12
-
-### 操作系统
-- ✅ Windows 10/11
-- ✅ macOS 10.15+
-- ✅ Linux (Ubuntu, CentOS, etc.)
-
-### 依赖包
-- `mcp >= 1.0.0` - Model Context Protocol 核心库
-- `requests >= 2.31.0` - HTTP 请求库
-
-## 📖 文档资源
-
-1. **README.md** - 项目概述和快速开始
-2. **INSTALL.md** - 详细安装和配置指南
-3. **EXAMPLES.md** - 完整使用示例和工作流程
-4. **CHANGELOG.md** - 版本更新记录
-5. **PROJECT_SUMMARY.md** - 项目总结 (本文件)
-
-## 🎯 使用场景
-
-### 1. 开发环境
-```bash
-python main.py --verbose
-```
-
-### 2. 生产环境
-```bash
-pip install .
-weknora-mcp-server
-```
-
-### 3. Docker 部署
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY . .
-RUN pip install .
-CMD ["weknora-mcp-server"]
-```
-
-### 4. 系统服务
-```ini
-[Unit]
-Description=WeKnora MCP Server
-
-[Service]
-ExecStart=/usr/local/bin/weknora-mcp-server
-Environment=WEKNORA_BASE_URL=http://localhost:8080/api/v1
-```
-
-## 🔧 故障排除
-
-### 常见问题
-1. **导入错误**: 运行 `pip install -r requirements.txt`
-2. **连接错误**: 检查 `WEKNORA_BASE_URL` 设置
-3. **认证错误**: 验证 `WEKNORA_API_KEY` 配置
-4. **环境检查**: 运行 `python main.py --check-only`
-
-### 调试模式
-```bash
-python main.py --verbose          # 详细日志
-python test_module.py            # 运行测试
-```
-
-## 🎉 项目成就
-
-✅ **完整的可运行模组** - 从单个脚本转换为完整的 Python 包
-✅ **多种启动方式** - 提供 7 种不同的启动方法
-✅ **完善的文档** - 包含安装、使用、示例等完整文档
-✅ **全面的测试** - 所有功能都经过测试验证
-✅ **现代化配置** - 支持 setup.py 和 pyproject.toml
-✅ **跨平台兼容** - 支持 Windows、macOS、Linux
-✅ **生产就绪** - 可用于开发和生产环境
-
-## 🚀 下一步
-
-1. **部署到生产环境**
-2. **集成到 CI/CD 流程**
-3. **发布到 PyPI**
-4. **添加更多测试用例**
-5. **性能优化和监控**
-
----
-
-**项目状态**: ✅ 完成并可投入使用
-**项目仓库**: https://github.com/NannaOlympicBroadcast/WeKnoraMCP
-**最后更新**: 2025年10月
-**版本**: 1.0.0
+- Python 3.10+
+- 跨平台（Windows / macOS / Linux）
+- 依赖：`fastmcp`、`pydantic`、`requests`

@@ -1,16 +1,24 @@
-FROM python:3.12-slim
+# syntax=docker/dockerfile:1
+# uv-managed project (pyproject.toml + uv.lock). requirements.txt is gone, so we
+# install from the lockfile for reproducible builds.
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
+# Install runtime dependencies first (cached layer). --frozen honors uv.lock,
+# --no-dev excludes pytest/mypy/ruff/etc. from the production image.
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project --no-dev
+
+# Copy the rest of the source and install the project itself.
 COPY . .
-RUN pip install --no-cache-dir -e .
+RUN uv sync --frozen --no-dev
 
 ENV MCP_HOST=0.0.0.0
 ENV MCP_PORT=8000
 ENV WEKNORA_BASE_URL=http://app:8080/api/v1
+# WEKNORA_API_KEY must be injected at runtime (docker -e / compose env).
 
 EXPOSE 8000
 
-CMD ["weknora-mcp-server", "--transport", "http", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "weknora-mcp-server", "--transport", "http", "--host", "0.0.0.0", "--port", "8000"]

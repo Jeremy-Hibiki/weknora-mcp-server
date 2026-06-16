@@ -1,114 +1,75 @@
-# 使用 uv 运行 WeKnora MCP 服务器
+# WeKnora MCP Server 配置
 
-> 更推荐使用`uv`来运行基于python的MCP服务。
+本服务器仅支持**网络传输**（`http` 默认，或 `sse`），不再支持 stdio。
 
-## 1. 安装 uv
+## 1. 启动服务器
 
 ```bash
-# macOS/Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# 安装依赖（uv，复现 uv.lock）
+uv sync --frozen
 
-# 或使用 Homebrew (macOS)
-brew install uv
+# 启动（默认 http，监听 0.0.0.0:8000）
+uv run weknora-mcp-server
 
-# Windows
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+# 等价于显式指定
+uv run weknora-mcp-server --transport http --host 0.0.0.0 --port 8000
+
+# 或用环境变量覆盖
+MCP_TRANSPORT=http MCP_HOST=0.0.0.0 MCP_PORT=8000 uv run weknora-mcp-server
 ```
+
+API Key 与后端地址通过环境变量注入：
+
+```bash
+export WEKNORA_BASE_URL="http://<weknora-host>:8080/api/v1"
+export WEKNORA_API_KEY="your_api_key"
+```
+
+默认 MCP 端点：`http://<host>:8000/mcp`
 
 ## 2. MCP 客户端配置
 
-### Claude Desktop 配置
+所有客户端连同一个 HTTP 端点。API Key 通过 `X-Api-Key` 请求头传递；若服务端已用 `WEKNORA_API_KEY` 环境变量注入（如 Docker），客户端可省略 `headers`。
 
-在 Claude Desktop 设置中添加:
+### Claude Desktop / Cursor / KiloCode / 通用 MCP 客户端
 
 ```json
 {
   "mcpServers": {
     "weknora": {
-      "args": [
-        "--directory",
-        "/path/WeKnora/mcp-server",
-        "run",
-        "run_server.py"
-      ],
-      "command": "uv",
-      "env": {
-        "WEKNORA_API_KEY": "your_api_key_here",
-        "WEKNORA_BASE_URL": "http://localhost:8080/api/v1"
+      "type": "http",
+      "url": "http://localhost:8000/mcp",
+      "headers": {
+        "X-Api-Key": "your_api_key"
       }
     }
   }
 }
 ```
 
-### Cursor 配置
+### Docker 部署
 
-在 Cursor 中，编辑 MCP 配置文件 (通常在 `~/.cursor/mcp-config.json`):
+见仓库 `Dockerfile`。运行时注入环境变量：
 
-```json
-{
-  "mcpServers": {
-    "weknora": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/path/WeKnora/mcp-server",
-        "run",
-        "run_server.py"
-      ],
-      "env": {
-        "WEKNORA_API_KEY": "your_api_key_here",
-        "WEKNORA_BASE_URL": "http://localhost:8080/api/v1"
-      }
-    }
-  }
-}
+```bash
+docker run -p 8000:8000 \
+  -e WEKNORA_API_KEY=your_api_key \
+  -e WEKNORA_BASE_URL=http://<weknora-host>:8080/api/v1 \
+  weknora-mcp-server
 ```
 
-### KiloCode 配置
+## 3. 传输方式
 
-对于 KiloCode 或其他支持 MCP 的编辑器，配置如下:
+| Transport   | 用途                                            | 端点   |
+| ----------- | ----------------------------------------------- | ------ |
+| `http`（默认） | Streamable HTTP（MCP 2025-03-26 规范），推荐    | `/mcp` |
+| `sse`       | Server-Sent Events，兼容旧客户端                | `/sse` |
+| ~~stdio~~   | 已移除                                          | —      |
 
-```json
-{
-  "mcpServers": {
-    "weknora": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/path/WeKnora/mcp-server",
-        "run",
-        "run_server.py"
-      ],
-      "env": {
-        "WEKNORA_API_KEY": "your_api_key_here",
-        "WEKNORA_BASE_URL": "http://localhost:8080/api/v1"
-      }
-    }
-  }
-}
-```
+## 4. 命令行选项
 
-### 其他 MCP 客户端
-
-对于一般 MCP 客户端配置:
-
-```json
-{
-  "mcpServers": {
-    "weknora": {
-      "command": "uv",
-      "args": [
-        "--directory",
-        "/path/WeKnora/mcp-server",
-        "run",
-        "run_server.py"
-      ],
-      "env": {
-        "WEKNORA_API_KEY": "your_api_key_here",
-        "WEKNORA_BASE_URL": "http://localhost:8080/api/v1"
-      }
-    }
-  }
-}
+```bash
+uv run weknora-mcp-server --help
+uv run weknora-mcp-server --version
+uv run weknora-mcp-server --transport sse --port 8001   # 切换 SSE
 ```

@@ -5,6 +5,28 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 并且本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### 变更
+- 重构为只读检索服务器：移除全部创建/删除/更新工具及 `chat`/`agent_chat`，保留 16 个只读工具
+- 优化 `WeKnoraClient` 类型标注：新增 `_types/responses.py`，用 TypedDict 精确描述各端点响应结构（复用 `_types/weknora.py` 业务模型）
+- 精简工具返回：剥离 `code`/`message` 协议包裹，仅返回 `data` 业务载荷（新增 `_unwrap` helper）
+- 各 tool 进一步投影为 LLM 友好的精简视图（`KBSummary`/`SearchHit`/`KnowledgeSummary`/`KnowledgeDetail`/`WikiSearchEntry`/`WikiPageView`/`WikiIndexView`），剔除内部配置与冗余字段（chunking/storage 配置、`chunk_refs`、重复的知识摘要、搜索结果中的 wiki 全文等）
+- 清理 `WeKnoraClient` 中破坏性与聊天相关方法及 SSE 流处理逻辑（含 `WEKNORA_CHAT_TIMEOUT`）
+- 补全 `main.py` / `weknora_mcp_server.py` 函数类型注解，通过 mypy strict 检查
+- 修正 mypy `python_version` 为 3.10（与 `requires-python` 一致）
+- 为 inline-snapshot 配置 `format-command = "ruff format"`
+- 为所有 tool 标注 MCP `annotations`（`readOnlyHint=True` / `destructiveHint=False` / `idempotentHint=True` / `openWorldHint=True`），声明只读语义
+- 完全移除 stdio 传输方式，仅保留 http（默认）与 sse；`--transport` 默认改为 `http`，Dockerfile/各文档对齐
+
+### 移除的工具
+- `create_tenant`、`create_knowledge_base`、`create_knowledge_from_file`、`create_knowledge_from_url`、`create_model`、`create_session`
+- `delete_knowledge_base`、`delete_knowledge`、`delete_session`、`delete_chunk`
+- `chat`、`agent_chat`
+- `list_agents`、`get_agent`（agent 相关只读工具一并移除）
+- `list_tenants`、`list_models`、`get_model`、`get_session`、`list_sessions`（租户/模型/会话相关只读工具一并移除，仅保留知识库检索与查询）
+- `list_chunks`（chunk 维度查询移除，检索已直接返回命中内容）
+
 ## [1.0.0] - 2024-01-XX
 
 ### 新增
