@@ -1,6 +1,3 @@
-# syntax=docker/dockerfile:1
-# uv-managed project (pyproject.toml + uv.lock). requirements.txt is gone, so we
-# install from the lockfile for reproducible builds.
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
