@@ -17,6 +17,7 @@
 - 修正 mypy `python_version` 为 3.10（与 `requires-python` 一致）
 - 为 inline-snapshot 配置 `format-command = "ruff format"`
 - 为所有 tool 标注 MCP `annotations`（`readOnlyHint=True` / `destructiveHint=False` / `idempotentHint=True` / `openWorldHint=True`），声明只读语义
+- 完全移除 stdio 传输方式，仅保留 http（默认）与 sse；`--transport` 默认改为 `http`，Dockerfile/各文档对齐
 
 ### 移除的工具
 - `create_tenant`、`create_knowledge_base`、`create_knowledge_from_file`、`create_knowledge_from_url`、`create_model`、`create_session`

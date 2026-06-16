@@ -78,13 +78,11 @@ class InjectApiKeyMiddleware(Middleware):
     Intercepts every MCP *request* (``initialize``, ``tools/call``,
     ``resources/read``, …) via the ``on_request`` hook.
 
-    * **HTTP / SSE transports** — reads the ``X-Api-Key`` header through
-      FastMCP's ``get_http_request()`` helper, which returns the Starlette
-      ``Request`` object stored in a ContextVar by ``RequestContextMiddleware``
-      before any MCP processing begins.
-    * **stdio transport** — ``get_http_request()`` raises ``RuntimeError``
-      (no HTTP request exists); the middleware falls back to the
-      ``WEKNORA_API_KEY`` environment variable.
+    Reads the ``X-Api-Key`` header via FastMCP's ``get_http_request()`` helper
+    (the Starlette ``Request`` stored in a ContextVar by
+    ``RequestContextMiddleware`` before any MCP processing begins); when the
+    header is absent it falls back to the ``WEKNORA_API_KEY`` environment
+    variable.
 
     The resolved key is written into ``context.fastmcp_context._request_state``
     under ``_API_KEY_FIELD``.  FastMCP propagates that dict (by reference) to
@@ -376,11 +374,6 @@ async def wiki_index_view(
 # ── Transport helpers ─────────────────────────────────────────────────────────
 
 
-async def run_stdio() -> None:
-    """Run the MCP server using stdio transport"""
-    await mcp.run_async(transport="stdio", show_banner=False)
-
-
 async def run_sse(host: str, port: int) -> None:
     """Run the MCP server using SSE transport (legacy MCP clients)."""
     await mcp.run_async(transport="sse", host=host, port=port, show_banner=False)
@@ -392,38 +385,36 @@ async def run_http(host: str, port: int) -> None:
 
 
 def main() -> None:
-    """Main entry point — supports stdio, sse, and http transports.
+    """Main entry point — network transports only (sse or http).
 
     Transport selection (in priority order):
       1. --transport CLI flag
       2. MCP_TRANSPORT environment variable
-      3. Default: stdio
+      3. Default: http
     """
     parser = argparse.ArgumentParser(description="WeKnora MCP Server")
     parser.add_argument(
         "--transport",
-        choices=["stdio", "sse", "http"],
-        default=os.getenv("MCP_TRANSPORT", "stdio"),
-        help="Transport type: stdio (default), sse, or http",
+        choices=["sse", "http"],
+        default=os.getenv("MCP_TRANSPORT", "http"),
+        help="Transport type: http (default) or sse",
     )
     parser.add_argument(
         "--host",
         default=os.getenv("MCP_HOST", "0.0.0.0"),
-        help="Bind host for network transports (default: 0.0.0.0)",
+        help="Bind host (default: 0.0.0.0)",
     )
     parser.add_argument(
         "--port",
         type=int,
         default=int(os.getenv("MCP_PORT", "8000")),
-        help="Bind port for network transports (default: 8000)",
+        help="Bind port (default: 8000)",
     )
     args = parser.parse_args()
 
-    if args.transport == "stdio":
-        asyncio.run(run_stdio())
-    elif args.transport == "sse":
+    if args.transport == "sse":
         asyncio.run(run_sse(args.host, args.port))
-    elif args.transport == "http":
+    else:
         asyncio.run(run_http(args.host, args.port))
 
 

@@ -7,11 +7,11 @@
 ### 1. 启动服务器
 
 ```bash
-# 推荐方式 - 使用主入口点
-python main.py
+# 默认 http，端点 http://localhost:8000/mcp
+uv run weknora-mcp-server
 
 # 启用详细日志
-python main.py --verbose
+uv run weknora-mcp-server --verbose
 ```
 
 ### 2. 环境配置示例
@@ -128,7 +128,7 @@ echo "WEKNORA_API_KEY=your_api_key_here" >> .env
 
 ```bash
 # 1. 启动服务器
-python main.py --verbose
+uv run weknora-mcp-server --verbose
 
 # 2. 在 MCP 客户端中按以下步骤检索
 ```
@@ -198,7 +198,7 @@ python main.py --verbose
 ```json
 {
   "error": "Unauthorized",
-  "solution": "检查 X-Api-Key 请求头（HTTP/SSE）或 WEKNORA_API_KEY 环境变量（stdio）是否正确"
+  "solution": "检查 X-Api-Key 请求头（HTTP/SSE）或 WEKNORA_API_KEY 环境变量是否正确"
 }
 ```
 
@@ -235,22 +235,20 @@ python main.py --verbose
 
 ## 集成示例
 
-### 与 Claude Desktop 集成
-在 Claude Desktop 的配置文件中添加：
+### 与 Claude Desktop / Cursor 等 MCP 客户端集成
+客户端通过 HTTP 连接运行中的服务器（需先启动 `uv run weknora-mcp-server`）：
 ```json
 {
   "mcpServers": {
     "weknora": {
-      "command": "python",
-      "args": ["path/to/main.py"],
-      "env": {
-        "WEKNORA_BASE_URL": "http://localhost:8080/api/v1",
-        "WEKNORA_API_KEY": "your_api_key"
-      }
+      "type": "http",
+      "url": "http://localhost:8000/mcp",
+      "headers": { "X-Api-Key": "your_api_key" }
     }
   }
 }
 ```
+完整配置见 [MCP_CONFIG.md](./MCP_CONFIG.md)。
 
 项目仓库: https://github.com/NannaOlympicBroadcast/WeKnoraMCP
 
@@ -260,7 +258,7 @@ python main.py --verbose
 ## 故障排除
 
 如果遇到问题：
-1. 运行 `python main.py --verbose` 查看详细日志
+1. 运行 `uv run weknora-mcp-server --verbose` 查看详细日志
 2. 检查 WeKnora 服务是否正常运行
 3. 验证网络连接和防火墙设置
 4. 确认 API Key 具有对应资源的只读权限

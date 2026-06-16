@@ -19,7 +19,7 @@ ToolList = TypeAdapter(Sequence[Tool])
 
 @pytest.fixture
 async def mcp_client(monkeypatch: pytest.MonkeyPatch):
-    # ApiKeyMiddleware falls back to WEKNORA_API_KEY for in-process / stdio transport.
+    # ApiKeyMiddleware falls back to WEKNORA_API_KEY for in-process tests.
     monkeypatch.setenv("WEKNORA_API_KEY", "test-key")
     async with Client(transport=mcp) as mcp_client:
         yield mcp_client

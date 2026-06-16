@@ -21,7 +21,7 @@ import asyncio
 import os
 import sys
 
-from .weknora_mcp_server import run_stdio, run_sse, run_http, mcp
+from .weknora_mcp_server import run_sse, run_http, mcp
 
 
 class ApiKeyASGIMiddleware:
@@ -47,7 +47,7 @@ class ApiKeyASGIMiddleware:
 
         headers = dict(scope.get("headers", []))
         # 与 InjectApiKeyMiddleware 一致：HTTP client 可通过 X-Api-Key 头传 key，
-        # 缺省时回退到进程环境变量（便于 stdio/HTTP dev 模式从 .env 注入）。
+        # 缺省时回退到进程环境变量（便于 HTTP/SSE 模式从 .env 注入）。
         x_api_key = headers.get(b"x-api-key") or os.environ.get("WEKNORA_API_KEY", "").encode()
 
         if not x_api_key:
@@ -97,7 +97,7 @@ def check_environment_variables() -> bool:
         print("提示: 可以设置 WEKNORA_BASE_URL 环境变量")
 
     if not api_key:
-        print("提示: stdio 模式可设置 WEKNORA_API_KEY；HTTP 模式请使用 X-API-Key 请求头")
+        print("提示: HTTP/SSE 模式请通过 X-Api-Key 请求头或 WEKNORA_API_KEY 环境变量注入 API Key")
 
     print("=" * 40)
     return True
@@ -122,9 +122,9 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "--transport",
-        choices=["stdio", "sse", "http"],
-        default=os.getenv("MCP_TRANSPORT", "stdio"),
-        help="Transport type: stdio (default), sse, or http",
+        choices=["sse", "http"],
+        default=os.getenv("MCP_TRANSPORT", "http"),
+        help="Transport type: http (default) or sse",
     )
     parser.add_argument(
         "--host",
@@ -158,18 +158,13 @@ async def main() -> None:
     try:
         print(f"正在启动 WeKnora MCP Server (transport={args.transport})...")
 
-        # Select transport mode based on CLI argument or MCP_TRANSPORT env var
-        # - stdio: Default, used by VS Code Copilot for local integration
-        # - sse: Server-Sent Events over HTTP, suitable for cloud/remote deployments
-        # - http: Streamable HTTP sessions (MCP 2025-03-26 spec), compatible with REST clients
-        if args.transport == "stdio":
-            # Stdio mode: communication via stdin/stdout pipes (typical for CLI integrations)
-            await run_stdio()
-        elif args.transport == "sse":
-            # SSE mode: HTTP server with Server-Sent Events for bidirectional streaming
+        # Select transport mode based on CLI argument or MCP_TRANSPORT env var.
+        # (network transports only — stdio is not supported)
+        # - http (default): Streamable HTTP sessions (MCP 2025-03-26 spec)
+        # - sse: Server-Sent Events over HTTP, for legacy clients
+        if args.transport == "sse":
             await run_sse(args.host, args.port)
-        elif args.transport == "http":
-            # HTTP mode: HTTP REST server with request/response model
+        else:
             await run_http(args.host, args.port)
 
     except ImportError as e:
