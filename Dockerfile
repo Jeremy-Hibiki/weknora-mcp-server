@@ -8,11 +8,13 @@ WORKDIR /app
 # Install runtime dependencies first (cached layer). --frozen honors uv.lock,
 # --no-dev excludes pytest/mypy/ruff/etc. from the production image.
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-install-project --no-dev
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project --no-dev
 
 # Copy the rest of the source and install the project itself.
 COPY . .
-RUN uv sync --frozen --no-dev
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
 
 ENV MCP_HOST=0.0.0.0
 ENV MCP_PORT=8000
