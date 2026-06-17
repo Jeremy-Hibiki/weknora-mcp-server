@@ -16,10 +16,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ENV MCP_HOST=0.0.0.0
 ENV MCP_PORT=8000
 ENV WEKNORA_BASE_URL=http://app:8080/api/v1
-# WEKNORA_API_KEY must be injected at runtime (docker -e / compose env).
 
 EXPOSE 8000
 
-ENV PATH="/app/.venv/bin:$PATH"
-
-CMD ["weknora-mcp-server", "--transport", "http", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "weknora_mcp_server.main:app", "--host", "0.0.0.0", "--port", "8000"]

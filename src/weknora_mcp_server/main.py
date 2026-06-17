@@ -83,26 +83,6 @@ app = mcp.http_app(
 )
 
 
-def check_environment_variables() -> bool:
-    """检查环境变量配置"""
-    base_url = os.getenv("WEKNORA_BASE_URL")
-    api_key = os.getenv("WEKNORA_API_KEY")
-
-    print("=== WeKnora MCP Server 环境检查 ===")
-    print(f"Base URL: {base_url or 'http://localhost:8080/api/v1 (默认)'}")
-    print(f"API Key (env fallback): {'已设置' if api_key else '未设置'}")
-    print("HTTP/SSE 模式: 客户端应通过 X-API-Key 请求头传递 API Key")
-
-    if not base_url:
-        print("提示: 可以设置 WEKNORA_BASE_URL 环境变量")
-
-    if not api_key:
-        print("提示: HTTP/SSE 模式请通过 X-Api-Key 请求头或 WEKNORA_API_KEY 环境变量注入 API Key")
-
-    print("=" * 40)
-    return True
-
-
 def parse_arguments() -> argparse.Namespace:
     """解析命令行参数"""
     parser = argparse.ArgumentParser(
@@ -144,9 +124,6 @@ def parse_arguments() -> argparse.Namespace:
 async def main() -> None:
     """主函数"""
     args = parse_arguments()
-
-    # 检查环境变量
-    check_environment_variables()
 
     # 设置日志级别
     if args.verbose:
